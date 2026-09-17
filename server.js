@@ -11,6 +11,9 @@ const authRoutes = require('./src/routes/authRoutes');
 const agentRoutes = require('./src/routes/agentRoutes');
 const listingRoutes = require('./src/routes/listingRoutes');
 const leadRoutes = require('./src/routes/leadRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
+const settingRoutes = require('./src/routes/settingRoutes');
 const { notFound, errorHandler } = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -30,6 +33,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/settings', settingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -52,3 +58,4 @@ async function start() {
 start();
 
 module.exports = app;
+
