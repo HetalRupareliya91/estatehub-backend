@@ -3,9 +3,15 @@ const { Listing, User, Lead } = require('../models');
 
 // @route GET /api/listings
 // Supports optional filters: status, propertyType, city, minPrice, maxPrice, agentId, search
+// Supports pagination: page (default 1), limit (default 10, max 100)
 async function getListings(req, res, next) {
   try {
     const { status, propertyType, city, minPrice, maxPrice, agentId, search } = req.query;
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const offset = (page - 1) * limit;
+
     const where = {};
 
     if (status) where.status = status;
@@ -24,13 +30,24 @@ async function getListings(req, res, next) {
       ];
     }
 
-    const listings = await Listing.findAll({
+    const { rows, count } = await Listing.findAndCountAll({
       where,
       include: [{ model: User, as: 'agent', attributes: ['id', 'name', 'email'] }],
       order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+      distinct: true, // keep the count accurate with the join above
     });
 
-    res.json(listings);
+    res.json({
+      data: rows,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.max(Math.ceil(count / limit), 1),
+      },
+    });
   } catch (err) {
     next(err);
   }
