@@ -3,9 +3,15 @@ const { Lead, User, Listing, sequelize } = require('../models');
 
 // @route GET /api/leads
 // Supports optional filters: stage, source, interestType, agentId, search
+// Supports pagination: page (default 1), limit (default 10, max 100)
 async function getLeads(req, res, next) {
   try {
     const { stage, source, interestType, agentId, search } = req.query;
+
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const offset = (page - 1) * limit;
+
     const where = {};
 
     if (stage) where.stage = stage;
@@ -20,16 +26,27 @@ async function getLeads(req, res, next) {
       ];
     }
 
-    const leads = await Lead.findAll({
+    const { rows, count } = await Lead.findAndCountAll({
       where,
       include: [
         { model: User, as: 'agent', attributes: ['id', 'name', 'email'] },
         { model: Listing, as: 'listing', attributes: ['id', 'title', 'address'] },
       ],
       order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+      distinct: true, // keep the count accurate with the joins above
     });
 
-    res.json(leads);
+    res.json({
+      data: rows,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.max(Math.ceil(count / limit), 1),
+      },
+    });
   } catch (err) {
     next(err);
   }
