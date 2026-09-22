@@ -34,8 +34,27 @@ if (process.env.NODE_ENV !== 'test') {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'estatehub-backend' });
+// Reports service status, process uptime, and whether the database
+// connection is actually reachable right now - useful for uptime monitors
+// and load balancer health checks, not just "the process is running".
+app.get('/api/health', async (req, res) => {
+  let databaseStatus = 'disconnected';
+  try {
+    await sequelize.authenticate();
+    databaseStatus = 'connected';
+  } catch (err) {
+    databaseStatus = 'disconnected';
+  }
+
+  const healthy = databaseStatus === 'connected';
+
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    service: 'estatehub-backend',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    database: databaseStatus,
+  });
 });
 
 app.use('/api/auth', authRoutes);
@@ -73,4 +92,3 @@ async function start() {
 start();
 
 module.exports = app;
-
