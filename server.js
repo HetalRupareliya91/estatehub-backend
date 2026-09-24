@@ -21,9 +21,12 @@ const settingRoutes = require('./src/routes/settingRoutes');
 const appointmentRoutes = require('./src/routes/appointmentRoutes');
 const taskRoutes = require('./src/routes/taskRoutes');
 const documentRoutes = require('./src/routes/documentRoutes');
-const activityRoutes = require('./src/routes/activityRoutes');
 const commissionRoutes = require('./src/routes/commissionRoutes');
 const exportRoutes = require('./src/routes/exportRoutes');
+// activityRoutes intentionally not required: src/routes/activityRoutes.js
+// does not exist in this repo. Requiring it here crashed the server on
+// startup ("Cannot find module"). Build that route before re-adding this
+// line and the matching app.use('/api/activity', ...) below.
 const { notFound, errorHandler } = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -73,7 +76,7 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/documents', documentRoutes);
-app.use('/api/activity', activityRoutes);
+// app.use('/api/activity', activityRoutes); - disabled, see note near the top of this file
 app.use('/api/commissions', commissionRoutes);
 app.use('/api/export', exportRoutes);
 
