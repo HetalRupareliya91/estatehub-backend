@@ -5,6 +5,9 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 
+const swaggerUi = require('swagger-ui-express');
+const openapiSpec = require('./openapi.json');
+
 const sequelize = require('./src/config/db');
 require('./src/models'); // registers associations
 
@@ -56,6 +59,9 @@ app.get('/api/health', async (req, res) => {
     database: databaseStatus,
   });
 });
+
+// API reference: http://localhost:5000/api/docs
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
